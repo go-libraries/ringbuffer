@@ -12,6 +12,7 @@ type RingBuffer struct {
     r uint64        //read  pos
     w uint64        //write pos
     d uint64        //done  pos
+    tmp []interface{}
 }
 
 func MakeRingBuffer(size uint64) *RingBuffer {
@@ -19,6 +20,7 @@ func MakeRingBuffer(size uint64) *RingBuffer {
         rw:new(sync.RWMutex),
         size:size,
         buffer:make([]interface{}, size),
+        tmp:make([]interface{},0),
     }
 }
 
@@ -49,7 +51,9 @@ func (ring *RingBuffer) Write(i interface{})  error {
     defer ring.rw.Unlock()
 
     if ring.IsFull() {
-        return errors.New("it's full")
+        ring.tmp = append(ring.tmp, i)
+        return nil
+        //return errors.New("it's full")
     }
 
     ring.buffer[ring.w] = i
@@ -80,6 +84,12 @@ func (ring *RingBuffer) Read()  (uint64,interface{}){
     v := ring.buffer[now]
     ring.r = next
 
+    //fmt.Println(len(ring.tmp))
+    if len(ring.tmp) > 0 {
+        t := ring.tmp[0]
+        ring.tmp = ring.tmp[1:]
+        ring.Write(t)
+    }
     return now, v
 }
 
