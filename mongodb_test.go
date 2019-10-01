@@ -59,6 +59,13 @@ func TestMongodb(t *testing.T) {
         }()
     }
 
+    collection := client.Database("testing").Collection("taiex_399")
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    opts := options.Update().SetUpsert(true)
+    collection.UpdateOne(ctx, bson.M{"name": "pi", "value": math.Round(10000)}, bson.M{"name": "pi", "value": math.Round(10000)},opts)
+    collection.DeleteOne(ctx, bson.M{"name": "pi", "value": math.Round(10000)})
     //ctx, _ = context.WithTimeout(context.Background(), 30*time.Second)
     //cur, err := collection.Find(ctx, bson.M{"name":"pi"})
     //if err != nil { log.Fatal(err.Error()) }
